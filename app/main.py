@@ -42,20 +42,34 @@ def delivery_report(err, msg):
         )
 
 
+def get_message_key(event: dict, event_id: str) -> str:
+    """
+    Choose a Kafka message key.
+
+    For industrial IoT events, machine_id is preferred because it preserves
+    ordering per machine. If machine_id is not available, event_id is used
+    as a safe fallback.
+    """
+    return event.get("machine_id", event_id)
+
+
 def publish_event(topic: str, event: dict) -> dict:
     try:
         event_id = str(uuid.uuid4())
+        message_key = get_message_key(event, event_id)
+
         envelope = {
             "event_id": event_id,
             "event_type": topic,
             "event_timestamp": utc_now_iso(),
             "source": "fastapi-rest-api",
+            "message_key": message_key,
             "payload": event,
         }
 
         producer.produce(
             topic=topic,
-            key=event_id,
+            key=message_key,
             value=json.dumps(envelope).encode("utf-8"),
             callback=delivery_report,
         )
