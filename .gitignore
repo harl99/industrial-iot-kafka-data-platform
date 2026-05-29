@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+*.egg-info/
+dist/
+build/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Mac
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Data Lake runtime files
+data_lake/raw/**/*.json
+data_lake/processed/**/*.json
+data_lake/raw/**/*.parquet
+data_lake/processed/**/*.parquet
+!data_lake/**/.gitkeep
+
+# Reports generated later
+reports/screenshots/
+reports/figures/
+
+# Test/cache
+.pytest_cache/
+.coverage
+htmlcov/
