@@ -125,6 +125,21 @@ services:
     profiles:
       - consumers
 
+  actuator-consumer:
+    build:
+      context: .
+      dockerfile: consumers/Dockerfile
+    container_name: industrial_iot_actuator_consumer
+    depends_on:
+      - kafka
+      - kafka-init
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      ACTUATOR_CONSUMER_GROUP_ID: actuator-consumer-group
+    command: ["python", "-m", "consumers.actuator_consumer"]
+    profiles:
+      - consumers
+
   sensor-simulator:
     build:
       context: .
