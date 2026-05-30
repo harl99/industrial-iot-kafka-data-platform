@@ -1,7 +1,6 @@
 import json
 import os
 import signal
-import sys
 from typing import Any, Dict
 
 import psycopg2
@@ -21,6 +20,7 @@ TOPICS = [
     "sensor-readings",
     "maintenance-events",
     "operator-events",
+    "alerts",
 ]
 
 running = True
@@ -149,6 +149,43 @@ def insert_operator_event(cursor, event: Dict[str, Any]):
     )
 
 
+def insert_alert(cursor, event: Dict[str, Any]):
+    payload = event["payload"]
+
+    cursor.execute(
+        """
+        INSERT INTO alerts (
+            event_id,
+            source_event_id,
+            event_timestamp,
+            machine_id,
+            sensor_type,
+            alert_type,
+            alert_message,
+            severity,
+            threshold_value,
+            observed_value,
+            raw_event
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (event_id) DO NOTHING;
+        """,
+        (
+            event["event_id"],
+            payload["source_event_id"],
+            event["event_timestamp"],
+            payload["machine_id"],
+            payload["sensor_type"],
+            payload["alert_type"],
+            payload["alert_message"],
+            payload["severity"],
+            payload["threshold_value"],
+            payload["observed_value"],
+            json.dumps(event),
+        ),
+    )
+
+
 def process_message(cursor, topic: str, event: Dict[str, Any]):
     if topic == "sensor-readings":
         insert_sensor_reading(cursor, event)
@@ -156,6 +193,8 @@ def process_message(cursor, topic: str, event: Dict[str, Any]):
         insert_maintenance_event(cursor, event)
     elif topic == "operator-events":
         insert_operator_event(cursor, event)
+    elif topic == "alerts":
+        insert_alert(cursor, event)
     else:
         print(f"Skipping unsupported topic: {topic}")
 
