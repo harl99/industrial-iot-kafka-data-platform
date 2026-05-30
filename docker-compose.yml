@@ -89,6 +89,24 @@ services:
     volumes:
       - ./app:/app/app
 
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    container_name: industrial_iot_dashboard
+    depends_on:
+      - postgres
+    ports:
+      - "8501:8501"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: industrial_iot
+      POSTGRES_USER: iot_user
+      POSTGRES_PASSWORD: iot_password
+    volumes:
+      - ./dashboard:/app/dashboard
+
   sql-consumer:
     build:
       context: .
