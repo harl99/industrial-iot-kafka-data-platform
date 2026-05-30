@@ -21,6 +21,7 @@ TOPICS = [
     "maintenance-events",
     "operator-events",
     "alerts",
+    "actuator-commands",
 ]
 
 running = True
@@ -186,6 +187,37 @@ def insert_alert(cursor, event: Dict[str, Any]):
     )
 
 
+def insert_actuator_command(cursor, event: Dict[str, Any]):
+    payload = event["payload"]
+
+    cursor.execute(
+        """
+        INSERT INTO actuator_commands (
+            event_id,
+            event_timestamp,
+            machine_id,
+            actuator_id,
+            actuator_type,
+            command,
+            reason,
+            raw_event
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (event_id) DO NOTHING;
+        """,
+        (
+            event["event_id"],
+            event["event_timestamp"],
+            payload["machine_id"],
+            payload["actuator_id"],
+            payload["actuator_type"],
+            payload["command"],
+            payload["reason"],
+            json.dumps(event),
+        ),
+    )
+
+
 def process_message(cursor, topic: str, event: Dict[str, Any]):
     if topic == "sensor-readings":
         insert_sensor_reading(cursor, event)
@@ -195,6 +227,8 @@ def process_message(cursor, topic: str, event: Dict[str, Any]):
         insert_operator_event(cursor, event)
     elif topic == "alerts":
         insert_alert(cursor, event)
+    elif topic == "actuator-commands":
+        insert_actuator_command(cursor, event)
     else:
         print(f"Skipping unsupported topic: {topic}")
 
