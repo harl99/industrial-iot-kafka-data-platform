@@ -89,6 +89,27 @@ services:
     volumes:
       - ./app:/app/app
 
+  sql-consumer:
+    build:
+      context: .
+      dockerfile: consumers/Dockerfile
+    container_name: industrial_iot_sql_consumer
+    depends_on:
+      - kafka
+      - kafka-init
+      - postgres
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SQL_CONSUMER_GROUP_ID: sql-consumer-group
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: industrial_iot
+      POSTGRES_USER: iot_user
+      POSTGRES_PASSWORD: iot_password
+    command: ["python", "-m", "consumers.sql_consumer"]
+    profiles:
+      - consumers
+
   sensor-simulator:
     build:
       context: .
