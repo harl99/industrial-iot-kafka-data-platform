@@ -119,6 +119,21 @@ services:
     profiles:
       - producers
 
+  operator-producer:
+    build:
+      context: .
+      dockerfile: producers/Dockerfile
+    container_name: industrial_iot_operator_producer
+    depends_on:
+      - api
+    environment:
+      API_BASE_URL: http://api:8000
+      OPERATOR_INTERVAL_SECONDS: 2
+      OPERATOR_EVENT_LIMIT: 25
+    command: ["python", "-m", "producers.operator_input_producer"]
+    profiles:
+      - producers
+
 volumes:
   kafka_data:
   postgres_data:
