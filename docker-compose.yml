@@ -140,6 +140,24 @@ services:
     profiles:
       - consumers
 
+  data-lake-consumer:
+    build:
+      context: .
+      dockerfile: consumers/Dockerfile
+    container_name: industrial_iot_data_lake_consumer
+    depends_on:
+      - kafka
+      - kafka-init
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DATA_LAKE_CONSUMER_GROUP_ID: data-lake-consumer-group
+      DATA_LAKE_ROOT: /app/data_lake
+    volumes:
+      - ./data_lake:/app/data_lake
+    command: ["python", "-m", "consumers.data_lake_consumer"]
+    profiles:
+      - consumers
+
   sensor-simulator:
     build:
       context: .
