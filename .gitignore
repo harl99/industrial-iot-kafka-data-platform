@@ -37,10 +37,14 @@ data_lake/processed/**/*.parquet
 !data_lake/**/.gitkeep
 
 # Reports generated later
-reports/screenshots/
+
 reports/figures/
 
 # Test/cache
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Keep project screenshots for README
+!reports/screenshots/
+!reports/screenshots/*.png

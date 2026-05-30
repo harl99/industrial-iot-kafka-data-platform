@@ -755,3 +755,39 @@ Current version includes:
 - Streamlit dashboard
 - Azure mapping documentation
 
+
+---
+
+## Project Screenshots
+
+### Streamlit Dashboard - Event Overview
+
+![Streamlit Dashboard Overview](reports/screenshots/streamlit_dashboard_top.png)
+
+### Streamlit Dashboard - Machine Status and Sensor Readings
+
+![Machine Status and Sensor Readings](reports/screenshots/streamlit_dashboard_tables.png)
+
+### Streamlit Dashboard - Alerts and Actuator Commands
+
+![Alerts and Actuator Commands](reports/screenshots/streamlit_dashboard_alerts_actuators.png)
+
+### FastAPI Documentation
+
+![FastAPI Docs](reports/screenshots/fastapi_docs.png)
+
+### Kafka UI Topics
+
+![Kafka UI Topics](reports/screenshots/kafka_ui_topics.png)
+
+### Kafka UI Messages
+
+![Kafka UI Messages](reports/screenshots/kafka_ui_messages.png)
+
+### PostgreSQL Event Counts
+
+![PostgreSQL Counts](reports/screenshots/postgres_counts.png)
+
+### Local Data Lake Files
+
+![Data Lake Files](reports/screenshots/data_lake_files.png)
