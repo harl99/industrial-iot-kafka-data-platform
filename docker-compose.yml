@@ -110,6 +110,21 @@ services:
     profiles:
       - consumers
 
+  alert-consumer:
+    build:
+      context: .
+      dockerfile: consumers/Dockerfile
+    container_name: industrial_iot_alert_consumer
+    depends_on:
+      - kafka
+      - kafka-init
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      ALERT_CONSUMER_GROUP_ID: alert-consumer-group
+    command: ["python", "-m", "consumers.alert_consumer"]
+    profiles:
+      - consumers
+
   sensor-simulator:
     build:
       context: .
