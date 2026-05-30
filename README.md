@@ -1,48 +1,36 @@
 # Industrial IoT Kafka Data Platform
 
-A portfolio-grade industrial IoT data engineering project that simulates an industrial / IoT data platform using FastAPI, Kafka, PostgreSQL, Docker, local Data Lake patterns, and Streamlit.
+A portfolio-grade industrial IoT data engineering platform built locally with FastAPI, Apache Kafka, PostgreSQL, Docker, a local Data Lake pattern, and Streamlit.
 
-The goal of this project is to demonstrate a realistic event-driven data engineering architecture where multiple industrial sources generate events, a REST API receives JSON payloads, Kafka distributes events through topics, and downstream consumers process, persist, alert, and simulate actuator actions.
+This project simulates a realistic industrial / IoT event-driven architecture where multiple sources generate events, a REST API receives JSON payloads, Kafka distributes events through topics, consumers process messages, PostgreSQL stores structured operational data, a local Data Lake stores raw and processed files, alerts are generated from sensor thresholds, actuator actions are simulated, and a Streamlit dashboard visualizes the system.
 
 ---
 
-## 1. Business Problem
+## Business Problem
 
-Industrial environments generate continuous operational data from sensors, machines, maintenance systems, and human operators.
+Industrial environments generate continuous operational data from sensors, machines, maintenance systems, operator actions, alarms, and actuator commands.
 
-A company may need to answer questions such as:
+A company needs to answer questions such as:
 
 - Are machines operating within safe thresholds?
 - Which sensors are reporting critical values?
-- Are maintenance events being tracked properly?
+- Are maintenance events being tracked?
+- Are operators acknowledging alarms or requesting shutdowns?
 - Can alerts be generated in near real time?
-- Can actuator commands be triggered based on industrial events?
-- Can operational data be stored for analytics and reporting?
+- Can actuator commands be simulated or triggered safely?
+- Can events be stored for dashboards, analytics, auditing, and future machine learning?
 
-This project simulates that problem using a local data engineering platform.
+This project demonstrates how an event-driven data engineering architecture can solve that problem.
 
 ---
 
-## 2. Architecture
+## High-Level Architecture
 
 ~~~text
-Sensor / Industrial System Producers
-                ↓
-        FastAPI REST API
-                ↓
-        Kafka Producer
-                ↓
-          Kafka Topics
-                ↓
-       Multiple Consumers
-                ↓
-PostgreSQL / Local Data Lake / Alerts / Actuators / Dashboard
-~~~
-
-Current first version:
-
-~~~text
-Client / Industrial System
+Sensor Simulator Producer
+Maintenance Event Producer
+Operator Input Producer
+Manual API Requests
         ↓
 FastAPI REST API
         ↓
@@ -50,94 +38,386 @@ Kafka Producer
         ↓
 Kafka Topics
         ↓
-Kafka UI for verification
+Consumers
+        ↓
+PostgreSQL / Local Data Lake / Alerts / Actuator Simulation / Dashboard
 ~~~
 
 ---
 
-## 3. Technologies
+## Data Flow
+
+~~~text
+1. Producers generate industrial events.
+2. FastAPI receives JSON payloads through REST endpoints.
+3. Pydantic validates incoming payloads.
+4. FastAPI wraps payloads into a standard event envelope.
+5. Kafka producer publishes events to Kafka topics.
+6. Consumers subscribe to topics using consumer groups.
+7. SQL consumer persists structured events into PostgreSQL.
+8. Alert consumer detects threshold violations and publishes alerts.
+9. Actuator consumer simulates industrial actuator actions.
+10. Data Lake consumer writes raw and processed events as JSON files.
+11. Streamlit dashboard reads PostgreSQL and visualizes the platform.
+~~~
+
+---
+
+## Technologies
 
 | Technology | Purpose |
 |---|---|
 | Python | Main programming language |
-| FastAPI | REST API for receiving industrial JSON events |
-| Pydantic | Payload validation and schema enforcement |
+| FastAPI | REST API for event ingestion |
+| Pydantic | JSON payload validation |
 | Apache Kafka | Event streaming platform |
 | Confluent Kafka Python Client | Kafka producer and consumer integration |
 | PostgreSQL | Structured relational storage |
 | Docker Compose | Local orchestration |
-| Kafka UI | Kafka topic and message visualization |
-| Streamlit | Dashboard application |
+| Kafka UI | Kafka topic/message inspection |
+| Streamlit | Operational dashboard |
+| Plotly | Dashboard visualizations |
 | Local folders | Simulated Data Lake |
-| GitHub | Portfolio and version control |
+| Git / GitHub | Version control and portfolio delivery |
 
 ---
 
-## 4. Data Flow
+## Repository Structure
 
-1. External industrial systems or simulators send JSON data to FastAPI endpoints.
-2. FastAPI validates the payload using Pydantic models.
-3. FastAPI wraps each payload into a standard event envelope.
-4. The internal Kafka producer publishes the event to the correct Kafka topic.
-5. Kafka stores the event in a topic partition.
-6. Consumers will later read from Kafka topics.
-7. Consumers will write data to PostgreSQL, local Data Lake folders, alerts, actuator simulations, and dashboard tables.
+~~~text
+industrial-iot-kafka-data-platform/
+├── app/
+│   ├── Dockerfile
+│   ├── __init__.py
+│   └── main.py
+├── producers/
+│   ├── Dockerfile
+│   ├── sensor_simulator.py
+│   ├── maintenance_event_producer.py
+│   └── operator_input_producer.py
+├── consumers/
+│   ├── Dockerfile
+│   ├── sql_consumer.py
+│   ├── alert_consumer.py
+│   ├── actuator_consumer.py
+│   └── data_lake_consumer.py
+├── database/
+│   └── init.sql
+├── dashboard/
+│   ├── Dockerfile
+│   └── dashboard_app.py
+├── data_lake/
+│   ├── raw/
+│   │   ├── sensor_readings/
+│   │   ├── maintenance_events/
+│   │   └── operator_events/
+│   └── processed/
+│       ├── alerts/
+│       ├── actuator_commands/
+│       └── processed_events/
+├── docs/
+├── reports/
+├── tests/
+├── docker-compose.yml
+├── requirements.txt
+├── README.md
+└── .gitignore
+~~~
 
 ---
 
-## 5. Current REST API Endpoints
+## REST API Endpoints
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/health` | Check API status |
-| POST | `/sensor-readings` | Receive sensor readings |
-| POST | `/maintenance-events` | Receive maintenance, inspection, failure, or repair events |
+| GET | `/health` | Health check |
+| POST | `/sensor-readings` | Receive industrial sensor readings |
+| POST | `/maintenance-events` | Receive maintenance, inspection, failure, and repair events |
 | POST | `/operator-events` | Receive manual operator actions |
 | POST | `/actuator-command` | Receive actuator commands |
 
 ---
 
-## 6. Kafka Topics
+## Kafka Topics
 
 | Topic | Purpose |
 |---|---|
-| `sensor-readings` | Raw sensor events |
-| `maintenance-events` | Maintenance, inspection, failure, and repair events |
+| `sensor-readings` | Raw sensor telemetry |
+| `maintenance-events` | Maintenance, inspection, failure, repair events |
 | `operator-events` | Manual operator actions |
-| `alerts` | Alerts generated from sensor thresholds |
+| `alerts` | Threshold-based alert events |
 | `actuator-commands` | Commands sent to simulated actuators |
-| `processed-events` | General processed output events |
+| `processed-events` | Results from actuator processing |
 
 ---
 
-## 7. Local Services
+## Producers
+
+### Sensor Simulator Producer
+
+Generates realistic industrial sensor events for:
+
+- `temperature_sensor`
+- `pressure_sensor`
+- `vibration_sensor`
+- `flow_sensor`
+- `energy_sensor`
+
+The simulator sends JSON payloads to:
+
+~~~text
+POST /sensor-readings
+~~~
+
+### Maintenance Event Producer
+
+Generates industrial maintenance events such as:
+
+- `maintenance`
+- `inspection`
+- `failure`
+- `repair`
+
+The producer sends JSON payloads to:
+
+~~~text
+POST /maintenance-events
+~~~
+
+### Operator Input Producer
+
+Generates manual operator events such as:
+
+- `alarm_acknowledged`
+- `inspection_note`
+- `shutdown_requested`
+- `maintenance_override`
+
+The producer sends JSON payloads to:
+
+~~~text
+POST /operator-events
+~~~
+
+---
+
+## Consumers
+
+### SQL Consumer
+
+Reads Kafka events and persists structured records into PostgreSQL.
+
+Subscribed topics:
+
+- `sensor-readings`
+- `maintenance-events`
+- `operator-events`
+- `alerts`
+- `actuator-commands`
+
+Persistence flow:
+
+~~~text
+Kafka topic → SQL consumer → PostgreSQL table
+~~~
+
+The consumer commits the database transaction before committing the Kafka offset.
+
+### Alert Consumer
+
+Reads from:
+
+~~~text
+sensor-readings
+~~~
+
+Publishes to:
+
+~~~text
+alerts
+~~~
+
+Alert rules:
+
+| Sensor Type | Rule | Alert Type |
+|---|---|---|
+| `temperature_sensor` | value > 100 | `high_temperature` |
+| `pressure_sensor` | value > 120 | `high_pressure` |
+| `vibration_sensor` | value > 0.8 | `high_vibration` |
+| `flow_sensor` | value < 20 | `low_flow_rate` |
+| `energy_sensor` | value > 500 | `high_energy_consumption` |
+
+### Actuator Consumer
+
+Reads from:
+
+~~~text
+actuator-commands
+~~~
+
+Publishes results to:
+
+~~~text
+processed-events
+~~~
+
+Simulated actuators:
+
+- `alarm_siren`
+- `cooling_fan`
+- `emergency_shutdown`
+- `pressure_relief_valve`
+- `maintenance_ticket_system`
+
+### Local Data Lake Consumer
+
+Reads Kafka topics and writes JSON files into partitioned local folders.
+
+Example path:
+
+~~~text
+data_lake/processed/alerts/year=2026/month=05/day=30/hour=01/
+~~~
+
+This simulates a cloud Data Lake pattern.
+
+---
+
+## PostgreSQL Tables
+
+| Table | Purpose |
+|---|---|
+| `sensor_readings` | Stores structured sensor readings |
+| `maintenance_events` | Stores maintenance, inspection, failure, and repair records |
+| `operator_events` | Stores operator actions |
+| `alerts` | Stores generated alert records |
+| `actuator_commands` | Stores actuator command records |
+
+Each table also stores the original `raw_event` JSON for traceability, debugging, replay, and audit purposes.
+
+---
+
+## Local Data Lake Layout
+
+~~~text
+data_lake/
+├── raw/
+│   ├── sensor_readings/
+│   ├── maintenance_events/
+│   └── operator_events/
+└── processed/
+    ├── alerts/
+    ├── actuator_commands/
+    └── processed_events/
+~~~
+
+Raw events are stored under `raw/`.
+
+Derived or processed events are stored under `processed/`.
+
+---
+
+## Dashboard
+
+The Streamlit dashboard connects to PostgreSQL and visualizes:
+
+- Total sensor readings
+- Total maintenance events
+- Total operator events
+- Total alerts
+- Total actuator commands
+- Event volume by category
+- Alerts by type
+- Machine-level status
+- Latest sensor readings
+- Latest alerts
+- Latest actuator commands
+
+Dashboard URL:
+
+~~~text
+http://localhost:8501
+~~~
+
+---
+
+## Local Services
 
 | Service | URL / Connection |
 |---|---|
 | FastAPI Docs | http://localhost:8000/docs |
 | FastAPI Health | http://localhost:8000/health |
 | Kafka UI | http://localhost:8080 |
+| Streamlit Dashboard | http://localhost:8501 |
 | PostgreSQL | localhost:5433 |
 | Kafka external listener | localhost:9094 |
 | Kafka internal Docker listener | kafka:9092 |
 
 ---
 
-## 8. How to Run Locally
+## How to Run Locally
 
-Start the full local stack:
+Start core services:
 
 ~~~bash
-docker compose up --build
+docker compose up --build -d
 ~~~
 
-Stop the services:
+Start only the dashboard:
+
+~~~bash
+docker compose up --build -d dashboard
+~~~
+
+Run sensor simulator:
+
+~~~bash
+docker compose --profile producers run --rm sensor-simulator
+~~~
+
+Run maintenance producer:
+
+~~~bash
+docker compose --profile producers run --rm maintenance-producer
+~~~
+
+Run operator producer:
+
+~~~bash
+docker compose --profile producers run --rm operator-producer
+~~~
+
+Run SQL consumer:
+
+~~~bash
+docker compose --profile consumers run --rm sql-consumer
+~~~
+
+Run alert consumer:
+
+~~~bash
+docker compose --profile consumers run --rm alert-consumer
+~~~
+
+Run actuator consumer:
+
+~~~bash
+docker compose --profile consumers run --rm actuator-consumer
+~~~
+
+Run Data Lake consumer:
+
+~~~bash
+docker compose --profile consumers run --rm data-lake-consumer
+~~~
+
+Stop services:
 
 ~~~bash
 docker compose down
 ~~~
 
-Stop services and delete local Kafka/PostgreSQL volumes:
+Stop services and delete local Docker volumes:
 
 ~~~bash
 docker compose down -v
@@ -147,7 +427,7 @@ Warning: `docker compose down -v` deletes local Kafka and PostgreSQL data.
 
 ---
 
-## 9. API Test Examples
+## API Test Examples
 
 ### Health Check
 
@@ -178,7 +458,7 @@ curl -X POST http://localhost:8000/maintenance-events \
   -d '{
     "machine_id": "compressor_02",
     "event_category": "inspection",
-    "description": "Routine inspection completed. No abnormal vibration detected.",
+    "description": "Routine inspection completed.",
     "technician": "operator_01",
     "severity": "low"
   }'
@@ -213,187 +493,219 @@ curl -X POST http://localhost:8000/actuator-command \
 
 ---
 
-## 10. PostgreSQL Tables
+## Useful Verification Commands
 
-The database initialization script creates the following tables:
+Check running containers:
 
-| Table | Purpose |
-|---|---|
-| `sensor_readings` | Stores structured sensor readings |
-| `maintenance_events` | Stores maintenance and inspection records |
-| `operator_events` | Stores operator actions |
-| `alerts` | Stores generated alerts |
-| `actuator_commands` | Stores actuator commands |
-
----
-
-## 11. Local Data Lake Structure
-
-The project simulates a local Data Lake using folders:
-
-~~~text
-data_lake/
-├── raw/
-│   ├── sensor_readings/
-│   ├── maintenance_events/
-│   └── operator_events/
-└── processed/
-    └── alerts/
+~~~bash
+docker ps
 ~~~
 
-This will later be used by the Data Lake consumer to store JSON or Parquet files.
+Check Kafka topic offsets:
+
+~~~bash
+docker exec -it industrial_iot_kafka /opt/kafka/bin/kafka-get-offsets.sh --bootstrap-server kafka:9092 --topic sensor-readings
+~~~
+
+Check PostgreSQL table counts:
+
+~~~bash
+docker exec -it industrial_iot_postgres psql -U iot_user -d industrial_iot -P pager=off -c "
+SELECT 'sensor_readings' AS table_name, COUNT(*) FROM sensor_readings
+UNION ALL
+SELECT 'maintenance_events' AS table_name, COUNT(*) FROM maintenance_events
+UNION ALL
+SELECT 'operator_events' AS table_name, COUNT(*) FROM operator_events
+UNION ALL
+SELECT 'alerts' AS table_name, COUNT(*) FROM alerts
+UNION ALL
+SELECT 'actuator_commands' AS table_name, COUNT(*) FROM actuator_commands;
+"
+~~~
+
+List Data Lake JSON files:
+
+~~~bash
+find data_lake -type f -name "*.json" | head -20
+~~~
 
 ---
 
-## 12. Kafka Concepts Explained
+## Kafka Concepts Demonstrated
 
 ### Broker
 
-A Kafka broker is a server that stores and serves Kafka topic data. In this project, the local Kafka container acts as the broker.
+A Kafka broker stores and serves topic data. In this project, the `industrial_iot_kafka` container acts as the local Kafka broker.
 
 ### Topic
 
-A topic is a logical stream of events. For example, `sensor-readings` stores sensor events, while `maintenance-events` stores maintenance events.
+A Kafka topic is a logical stream of events. This project uses separate topics for sensors, maintenance, operators, alerts, actuator commands, and processed events.
 
 ### Partition
 
-A partition is a subdivision of a Kafka topic. Partitions allow Kafka to scale because multiple consumers can process different partitions in parallel.
+A partition is a subdivision of a topic. Partitions allow parallelism and scalability.
 
 ### Offset
 
-An offset is the position of a message inside a Kafka partition. Consumers use offsets to track what they have already processed.
+An offset is the position of a message inside a partition. Offsets are tracked per partition, not globally across the topic.
 
 ### Producer
 
-A producer writes events to Kafka. In the current version, the FastAPI service acts as a Kafka producer.
+A producer publishes events to Kafka. In this project, FastAPI acts as a Kafka producer after receiving REST payloads.
 
 ### Consumer
 
-A consumer reads events from Kafka. Future consumers in this project will store events in PostgreSQL, generate alerts, write to the Data Lake, simulate actuators, and feed a dashboard.
+A consumer reads events from Kafka. This project includes SQL, alert, actuator, and Data Lake consumers.
 
 ### Consumer Group
 
-A consumer group is a group of consumers that share the processing workload for a topic. Kafka ensures that each partition is read by only one consumer within the same group.
+A consumer group allows multiple consumers to share processing work. Each partition is assigned to one consumer within the same group.
+
+### Message Key
+
+This project uses `machine_id` as the Kafka message key when available. This helps preserve event ordering per machine because all events for the same machine are routed to the same partition.
 
 ### Message Retention
 
-Kafka can retain messages for a configured amount of time or storage size. This allows consumers to replay historical events if needed.
+Kafka can retain messages for a configured time or size. This allows consumers to replay historical events.
 
 ### Event Streaming
 
-Event streaming means processing data continuously as events occur. This is different from batch processing, where data is processed periodically in large chunks.
+Event streaming means processing data continuously as events occur, instead of waiting for scheduled batch jobs.
 
 ---
 
-## 13. Azure Mapping
+## Azure Mapping
 
-Even though this project runs locally, the architecture is cloud-ready.
+Although this project runs locally, the architecture is cloud-ready.
 
 | Local Component | Azure Equivalent |
 |---|---|
-| Kafka | Azure Event Hubs / Confluent Cloud on Azure |
+| Apache Kafka | Azure Event Hubs / Confluent Cloud on Azure |
 | PostgreSQL | Azure SQL Database / Azure Database for PostgreSQL |
 | Local `data_lake/` folder | Azure Blob Storage / Azure Data Lake Storage Gen2 |
 | FastAPI local service | Azure App Service / Azure Container Apps |
-| Consumers | Azure Functions / Azure Container Apps / Databricks Jobs |
+| Python consumers | Azure Functions / Azure Container Apps / Databricks Jobs |
 | Streamlit dashboard | Power BI / Azure App Service |
 | Docker Compose | Azure Container Apps / AKS |
+| Kafka UI | Azure monitoring tools / Confluent Control Center / Event Hubs metrics |
+| Local alert consumer | Azure Stream Analytics / Azure Functions |
+| Local Data Lake consumer | Event Hubs Capture / Azure Functions / Databricks |
 
 ---
 
-## 14. Interview Talking Points
+## Cloud Architecture Equivalent
+
+~~~text
+Industrial Systems / IoT Devices
+        ↓
+Azure App Service / Azure Container Apps
+        ↓
+Azure Event Hubs
+        ↓
+Azure Functions / Azure Stream Analytics / Databricks
+        ↓
+Azure SQL Database / Azure Database for PostgreSQL
+        ↓
+Azure Data Lake Storage Gen2
+        ↓
+Power BI
+~~~
+
+---
+
+## Screenshots
+
+Recommended screenshots to add:
+
+~~~text
+reports/screenshots/fastapi_docs.png
+reports/screenshots/kafka_ui_topics.png
+reports/screenshots/kafka_ui_messages.png
+reports/screenshots/postgres_counts.png
+reports/screenshots/streamlit_dashboard.png
+reports/screenshots/data_lake_files.png
+~~~
+
+Suggested GitHub section:
+
+| Screenshot | Description |
+|---|---|
+| FastAPI Docs | REST API endpoints and schemas |
+| Kafka UI Topics | Kafka topics created locally |
+| Kafka UI Messages | Example events in Kafka |
+| PostgreSQL Counts | Events persisted in SQL tables |
+| Streamlit Dashboard | Operational monitoring dashboard |
+| Data Lake Files | Partitioned JSON event files |
+
+---
+
+## Interview Talking Points
 
 ### REST API
 
-I built a FastAPI REST API that receives industrial IoT events as JSON payloads. Each endpoint represents a different industrial event source, such as sensors, maintenance systems, operator input, or actuator commands.
+I built a FastAPI REST API that receives industrial IoT events as JSON payloads. Each endpoint represents a different event source, such as sensors, maintenance systems, operator actions, or actuator commands.
 
 ### Pydantic Validation
 
-I used Pydantic models to validate incoming JSON payloads before publishing them to Kafka. This prevents malformed data from entering the streaming pipeline.
+I used Pydantic to validate incoming JSON payloads before publishing to Kafka. This prevents malformed events from entering the streaming pipeline.
 
 ### Kafka Producer
 
-The FastAPI service acts as a Kafka producer. Once a payload is validated, it is wrapped in a standard event envelope and published to the appropriate Kafka topic.
-
-### Kafka Topics
-
-I separated Kafka topics by event domain. This makes the architecture easier to scale, monitor, and extend.
+The FastAPI service acts as a Kafka producer. After validation, it wraps each payload in a standard event envelope and publishes it to the appropriate Kafka topic.
 
 ### Event Envelope
 
-Each event includes metadata such as:
+Each event includes:
 
 - `event_id`
 - `event_type`
 - `event_timestamp`
 - `source`
+- `message_key`
 - `payload`
 
-This makes events easier to trace, audit, and process downstream.
+This makes the pipeline easier to trace, debug, and audit.
+
+### Kafka Message Key
+
+I use `machine_id` as the Kafka message key when available. This keeps events from the same machine in the same partition and helps preserve ordering per machine.
 
 ### SQL Sink
 
-A SQL consumer will read Kafka events and store structured records in PostgreSQL tables for querying and reporting.
+The SQL consumer persists Kafka events into PostgreSQL. It stores structured fields for querying and the raw JSON event for traceability.
 
-### Data Lake Sink
+### Offset Commit Strategy
 
-A Data Lake consumer will write raw and processed events into local folders, simulating how files would be stored in Azure Data Lake Storage.
+The SQL consumer commits the PostgreSQL transaction first and then commits the Kafka offset. This helps avoid marking a message as processed before it has been stored successfully.
 
 ### Alerting
 
-An alert consumer will detect threshold violations such as high temperature, high pressure, high vibration, low flow rate, or high energy consumption.
+The alert consumer reads sensor events, applies threshold rules, and publishes alert events to the `alerts` topic.
 
 ### Actuator Simulation
 
-An actuator consumer will simulate industrial responses such as activating a cooling fan, opening a pressure relief valve, triggering an alarm siren, creating a maintenance ticket, or performing an emergency shutdown.
+The actuator consumer reads actuator commands, simulates industrial actions, and publishes the result to `processed-events`.
+
+### Data Lake Sink
+
+The Data Lake consumer writes raw and processed Kafka events as JSON files into partitioned local folders. This simulates Azure Data Lake Storage Gen2.
+
+### Dashboard
+
+The Streamlit dashboard reads PostgreSQL and displays event counts, alerts, actuator commands, latest sensor readings, and machine status.
 
 ### Streaming vs Batch
 
-This project demonstrates streaming because events are processed continuously as they arrive. Batch processing would process accumulated data at scheduled intervals.
+This project demonstrates streaming because data is processed continuously as events arrive. Batch processing would process accumulated data at scheduled intervals.
 
 ### Azure Equivalent Architecture
 
-This local architecture maps directly to Azure services such as Event Hubs, Azure Functions, Azure Container Apps, Azure SQL Database, Azure Data Lake Storage, Stream Analytics, and Power BI.
+The local Kafka architecture can map to Azure Event Hubs, Azure Functions, Azure Container Apps, Azure SQL Database, Azure Data Lake Storage Gen2, and Power BI.
 
 ---
 
-## 15. Planned Improvements
-
-- Add sensor simulator producer with 5 industrial sensors
-- Add maintenance event producer
-- Add operator input producer
-- Add SQL consumer
-- Add alert consumer
-- Add actuator consumer
-- Add local Data Lake consumer
-- Add Streamlit dashboard
-- Add anomaly detection consumer
-- Add unit tests
-- Add screenshots
-- Add architecture diagram
-- Add Power BI / Azure architecture documentation
-- Add CI/CD workflow
-
----
-
-## 16. Commit Plan
-
-Planned Git commits:
-
-1. Initial project structure
-2. Add FastAPI REST endpoints
-3. Add Kafka producer
-4. Add sensor simulators
-5. Add SQL consumer
-6. Add alert consumer
-7. Add actuator consumer
-8. Add local data lake consumer
-9. Add dashboard
-10. Add README and screenshots
-
----
-
-## 17. Security Notes
+## Security Notes
 
 This project is designed to run locally and safely.
 
@@ -401,24 +713,45 @@ This project is designed to run locally and safely.
 - No `.env` file should be committed.
 - No production secrets should be stored in the repository.
 - Docker Compose uses local demo credentials only.
-- The project avoids unnecessary `sudo` usage.
-- Runtime data files are ignored by Git.
+- Runtime Data Lake JSON files are ignored by Git.
+- No unnecessary `sudo` commands are required.
 - The project is compatible with Mac and Apple Silicon through Docker images.
 
 ---
 
-## 18. Project Status
+## Future Improvements
 
-Current stage:
+- Add automated integration tests
+- Add anomaly detection consumer using z-score
+- Add Parquet output for the local Data Lake
+- Add CI/CD workflow
+- Add schema registry pattern
+- Add dead-letter topic for failed events
+- Add retry logic and error handling
+- Add Power BI version of the dashboard
+- Deploy to Azure Container Apps
+- Replace local Kafka with Azure Event Hubs
+- Replace local Data Lake with Azure Data Lake Storage Gen2
+- Add Terraform or Bicep infrastructure templates
 
-- Project structure created
-- FastAPI service created
-- Kafka service created
-- PostgreSQL service created
-- Kafka UI configured
-- Initial Kafka topics configured
-- REST endpoints publish events to Kafka
+---
 
-Next stage:
+## Project Status
 
-- Add sensor simulator producer
+Current version includes:
+
+- Local Docker architecture
+- FastAPI REST ingestion
+- Kafka topics
+- Kafka producer integration
+- Sensor simulator producer
+- Maintenance event producer
+- Operator input producer
+- SQL consumer
+- PostgreSQL persistence
+- Alert consumer
+- Actuator consumer
+- Local Data Lake consumer
+- Streamlit dashboard
+- Azure mapping documentation
+
